@@ -1,0 +1,37 @@
+# VM for developing ReflectRPC services with Python 3.5
+Vagrant.configure("2") do |config|
+  config.vm.define :jsonstore_dev
+  config.vm.box = "ubuntu/xenial64"
+
+  config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "public_network"
+
+  config.vm.network "forwarded_port", guest: 5500, host: 5500
+  config.vm.network "forwarded_port", guest: 5432, host: 5432
+
+  config.vm.synced_folder "../", "/vagrant_data"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "jsonstore-dev"
+    vb.memory = "1024"
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt update
+    apt install -y --no-install-recommends \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-setuptools \
+        gcc \
+        libffi-dev \
+        libssl-dev \
+        libssl1.0.0 \
+        vim \
+        postgresql
+    apt remove -y python3-cryptography
+    sed -i "s/#listen_addresses.*/listen_addresses = '0.0.0.0'/g" /etc/postgresql/9.5/main/postgresql.conf
+    sudo service postgresql restart
+    pip3 install reflectrpc
+  SHELL
+end
