@@ -9,7 +9,9 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 5500, host: 5500
   config.vm.network "forwarded_port", guest: 5432, host: 5432
 
-  config.vm.synced_folder "../", "/vagrant_data"
+  config.vm.provision "file", source: "../schema.sql", destination: "/tmp/schema.sql"
+
+  #config.vm.synced_folder "../", "/vagrant_data"
 
   config.vm.provider "virtualbox" do |vb|
     vb.name = "jsonstore-dev"
@@ -38,5 +40,7 @@ Vagrant.configure("2") do |config|
     sudo -u postgres psql -c "CREATE EXTENSION adminpack;"
     service postgresql restart
     pip3 install reflectrpc
+    sudo -u postgres psql -c 'CREATE DATABASE jsonstore'
+    sudo -u postgres psql -f /tmp/schema.sql jsonstore
   SHELL
 end
